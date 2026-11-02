@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conservation of Angular Momentum</title>
+<style>
+:root{--bg:#0B1A2B;--fg:#EDE8DC;--mut:#8C99A8;--grn:#7FD4A8;--amb:#E8B23A;--line:rgba(237,232,220,.16);--card:#10233A;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:-apple-system,"Segoe UI","Sarabun","Noto Sans Thai",Tahoma,sans-serif;overflow:hidden}
+body{background-image:linear-gradient(rgba(237,232,220,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(237,232,220,.045) 1px,transparent 1px);background-size:28px 28px}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+header{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 16px 4px;gap:10px}
+h1{font-size:clamp(17px,2.4vw,24px);font-weight:700;line-height:1.25}
+.sub{color:var(--mut);font-size:13px;margin-top:3px}
+.hb{display:flex;gap:8px;flex-shrink:0}
+.ob{background:transparent;border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;font-family:inherit}
+.ob:hover{border-color:var(--grn)}
+#chips{display:flex;gap:6px;align-items:center;padding:6px 16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;flex-shrink:0}
+#chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--fg);border-radius:999px;padding:5px 12px;font-size:13px;font-family:var(--mono);cursor:pointer;flex-shrink:0}
+.chip.on{border-color:var(--grn);color:var(--grn);background:rgba(127,212,168,.1)}
+.chip.pt.on{border-color:var(--amb);color:var(--amb);background:rgba(232,178,58,.1)}
+.gl{color:var(--mut);font-size:12px;font-family:var(--mono);margin-left:4px;flex-shrink:0}
+.sep{width:1px;height:20px;background:var(--line);margin:0 6px;flex-shrink:0}
+#stage{flex:1;min-height:0;position:relative}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#bar{display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 16px 6px;background:rgba(11,26,43,.94);border-top:1px solid var(--line);flex-shrink:0}
+#act{background:transparent;border:1.5px solid var(--amb);color:var(--amb);border-radius:10px;padding:0 16px;height:46px;min-width:120px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+#time{font-family:var(--mono);font-size:clamp(26px,5vw,38px);min-width:7.2ch;text-align:center;letter-spacing:1px}
+#go{background:var(--grn);color:#0B1A2B;border:none;width:52px;height:52px;border-radius:50%;font-size:20px;cursor:pointer;font-weight:700}
+#rs{background:transparent;color:var(--fg);border:1px solid var(--line);width:46px;height:46px;border-radius:50%;font-size:22px;cursor:pointer}
+#credit{text-align:center;color:var(--mut);font-size:11px;padding:2px 10px 8px;background:rgba(11,26,43,.94);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+@media(max-width:480px){#bar{gap:8px;padding:8px 10px 6px}#act{min-width:0;padding:0 10px;font-size:14px;height:44px}#time{font-size:24px;min-width:0}#go{width:46px;height:46px}#rs{width:42px;height:42px}#credit{white-space:normal}}
+.mod{position:fixed;inset:0;background:rgba(3,10,18,.72);display:flex;align-items:center;justify-content:center;z-index:10;padding:14px}
+.hide{display:none!important}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;width:min(640px,100%);max-height:92vh;overflow:auto;padding:16px 18px}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:17px}
+.x{background:none;border:none;color:var(--fg);font-size:20px;cursor:pointer}
+.card h3{font-size:14px;color:var(--amb);margin:14px 0 6px;font-weight:600}
+.card input[type=text],.card input[type=password],.card input[type=email],.card input[type=number]{background:#0B1A2B;border:1px solid var(--line);color:var(--fg);border-radius:7px;padding:7px 9px;font-size:14px;font-family:var(--mono);width:100%}
+.row{display:flex;gap:8px;align-items:center}
+.gb{background:var(--grn);color:#0B1A2B;border:none;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.mono{font-family:var(--mono);font-size:12.5px;line-height:1.65;white-space:pre-wrap;color:var(--fg)}
+.msg{font-size:13px;margin-top:6px;min-height:16px;color:var(--amb)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 10px}
+.grid label{font-size:12px;color:var(--mut);display:block;margin-bottom:3px}
+.ck{display:flex;gap:16px;margin:10px 0;font-size:14px;flex-wrap:wrap}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+ol{padding-left:20px;font-size:13.5px;line-height:1.6}
+details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-size:14px;color:var(--mut)}
+details input{margin-top:6px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <h1 id="ttl"></h1>
+      <div class="sub" id="sub"></div>
+    </div>
+    <div class="hb">
+      <button class="ob" id="lang">ไทย</button>
+      <button class="ob" id="tch"></button>
+    </div>
+  </header>
+  <div id="chips"></div>
+  <div id="stage"><canvas id="cv"></canvas></div>
+  <div id="bar">
+    <button id="act"></button>
+    <div id="time">00:00.00</div>
+    <button id="go">▶</button>
+    <button id="rs">↺</button>
+  </div>
+  <div id="credit"></div>
+</div>
+
+<div id="mod" class="mod hide"><div class="card">
+  <div class="mh"><b id="mT"></b><button class="x" id="mx">✕</button></div>
+  <div id="login">
+    <div class="row"><input type="password" id="pw" autocomplete="off"><button class="gb" id="pwb"></button></div>
+    <div class="msg" id="pwm"></div>
+  </div>
+  <div id="tb" class="hide">
+    <h3 id="hKey"></h3>
+    <div class="mono" id="key"></div>
+    <h3 id="hGuide"></h3>
+    <ol id="guide"></ol>
+    <h3 id="hSet"></h3>
+    <div class="grid" id="fields"></div>
+    <div class="ck">
+      <label><input type="checkbox" id="fric"> <span id="lFric"></span></label>
+      <label><input type="checkbox" id="vary"> <span id="lVary"></span></label>
+    </div>
+    <div class="btns">
+      <button class="gb" id="apply"></button>
+      <button class="ob" id="defb"></button>
+      <button class="ob" id="linkb"></button>
+    </div>
+    <input type="text" id="link" readonly class="hide" style="margin-top:8px">
+    <div class="msg" id="setm"></div>
+    <details>
+      <summary id="hChg"></summary>
+      <input type="email" id="cE" placeholder="email">
+      <input type="password" id="cA" placeholder="account password">
+      <input type="text" id="cN" placeholder="new teacher password">
+      <div class="btns"><button class="gb" id="cB"></button></div>
+      <div class="msg" id="cM"></div>
+    </details>
+  </div>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const MONO='ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace';
+const TAU=Math.PI*2;
+
+/* ---------- text ---------- */
+const TX={
+ en:{title:'Conservation of Angular Momentum',sub1:'Part 1 · Ring dropped onto a rotating disc',sub2:'Part 2 · Masses pulled inward on a rotating rod',
+  p1:'Part 1',p2:'Part 2',sp:['Slow','Medium','Fast'],ring:'Ring',spin:'Spin',drop:'Drop ring',pull:'Pull in',reset:'Reset',teacher:'Teacher',
+  disc:'DISC',ringL:'RING',rod:'ROD',mass:'MASSES',
+  credit:'Asst.Prof.Dr. Rossumont Jaryabhand · Rajamangala University of Technology Tawan-ok, Uthenthawai Campus · No Right Reserved',
+  mT:'Teacher',enter:'Enter',wrong:'Wrong password',hKey:'Answer key',hGuide:'How students measure',hSet:'Settings',
+  fric:'Friction',vary:'Vary ω₀ (±8%)',apply:'Apply',def:'Defaults',link:'Create student link',copied:'Link copied',applied:'Applied',bad:'Check the values',
+  chg:'Change password',cB:'Change',cOK:'Password changed',cBad:'Email or account password incorrect',
+  guide:['Press Spin. Time N full turns of the white stripe (or green mark) past the ▼ mark → ω₀ = 2πN / t.','Press Drop ring / Pull in, then time N turns again → ω.','From the masses and radii shown, compute I before and after. Compare L = Iω before and after.'],
+  last:'Last run',before:'before',after:'after',none:'(no run yet)'},
+ th:{title:'การอนุรักษ์โมเมนตัมเชิงมุม',sub1:'ตอนที่ 1 · ปล่อยวงแหวนลงบนจานหมุน',sub2:'ตอนที่ 2 · ดึงมวลเข้าหาแกนบนก้านหมุน',
+  p1:'ตอน 1',p2:'ตอน 2',sp:['ช้า','กลาง','เร็ว'],ring:'วงแหวน',spin:'หมุน',drop:'ปล่อยวงแหวน',pull:'ดึงมวลเข้า',reset:'เริ่มใหม่',teacher:'ครู',
+  disc:'จาน',ringL:'วงแหวน',rod:'ก้าน',mass:'มวล',
+  credit:'ผศ.ดร.รสสุมนต์ จารยะพันธุ์ · มหาวิทยาลัยเทคโนโลยีราชมงคลตะวันออก อุเทนถวาย · ไม่สงวนลิขสิทธิ์',
+  mT:'ส่วนครู',enter:'เข้า',wrong:'รหัสผ่านไม่ถูกต้อง',hKey:'เฉลย',hGuide:'วิธีวัดของนักศึกษา',hSet:'ตั้งค่า',
+  fric:'มีแรงเสียดทาน',vary:'สุ่ม ω₀ (±8%)',apply:'ใช้ค่านี้',def:'ค่าเริ่มต้น',link:'สร้างลิงก์นักศึกษา',copied:'คัดลอกลิงก์แล้ว',applied:'บันทึกแล้ว',bad:'ตรวจสอบค่าอีกครั้ง',
+  chg:'เปลี่ยนรหัสผ่าน',cB:'เปลี่ยน',cOK:'เปลี่ยนรหัสผ่านแล้ว',cBad:'อีเมลหรือรหัสบัญชีไม่ถูกต้อง',
+  guide:['กด หมุน แล้วจับเวลาแถบขาว (หรือจุดเขียว) ผ่านเครื่องหมาย ▼ ครบ N รอบ → ω₀ = 2πN / t','กด ปล่อยวงแหวน / ดึงมวลเข้า แล้วจับเวลา N รอบอีกครั้ง → ω','คำนวณ I ก่อนและหลังจากมวลและรัศมีที่แสดง แล้วเปรียบเทียบ L = Iω ก่อนและหลัง'],
+  last:'รอบล่าสุด',before:'ก่อน',after:'หลัง',none:'(ยังไม่ได้ทดลอง)'}
+};
+let lang=LS.get('amlab_lang')||'en';
+const t=k=>TX[lang][k];
+
+/* ---------- config ---------- */
+const DEF={dM:1.5,dR:12.5,aM:1.0,aR1:5.4,aR2:6.4,bM:1.4,bR1:10,bR2:12,rodM:0.2,rodL:40,rOut:18,rIn1:6,rIn2:9,m1:100,m2:200,m3:300,fric:false,vary:true};
+const FIELDS=[['dM','Disc mass (kg)','มวลจาน (kg)'],['dR','Disc radius (cm)','รัศมีจาน (cm)'],
+ ['aM','Ring A mass (kg)','มวลวงแหวน A (kg)'],['aR1','Ring A inner r (cm)','รัศมีใน A (cm)'],['aR2','Ring A outer r (cm)','รัศมีนอก A (cm)'],
+ ['bM','Ring B mass (kg)','มวลวงแหวน B (kg)'],['bR1','Ring B inner r (cm)','รัศมีใน B (cm)'],['bR2','Ring B outer r (cm)','รัศมีนอก B (cm)'],
+ ['rodM','Rod mass (kg)','มวลก้าน (kg)'],['rodL','Rod length (cm)','ความยาวก้าน (cm)'],['rOut','Start r (cm)','r เริ่มต้น (cm)'],
+ ['rIn1','End r option 1 (cm)','r ปลาย ตัวเลือก 1 (cm)'],['rIn2','End r option 2 (cm)','r ปลาย ตัวเลือก 2 (cm)'],
+ ['m1','Mass option 1 (g)','มวล ตัวเลือก 1 (g)'],['m2','Mass option 2 (g)','มวล ตัวเลือก 2 (g)'],['m3','Mass option 3 (g)','มวล ตัวเลือก 3 (g)']];
+let cfg=Object.assign({},DEF);
+(function(){
+ const q=new URLSearchParams(location.search).get('c');
+ if(q){try{Object.assign(cfg,JSON.parse(atob(q)));return}catch(e){}}
+ const s=LS.get('amlab_cfg');if(s){try{Object.assign(cfg,JSON.parse(s))}catch(e){}}
+})();
+
+/* ---------- physics ---------- */
+const SP1=[4,6,8],SP2=[1.5,2,2.5],FR=0.04;
+let sel={part:1,speed:1,ring:0,mass:1,rin:0};
+const ringOf=i=>i?{m:cfg.bM,r1:cfg.bR1,r2:cfg.bR2}:{m:cfg.aM,r1:cfg.aR1,r2:cfg.aR2};
+const Id=()=>0.5*cfg.dM*(cfg.dR/100)**2;
+const Ir=i=>{const r=ringOf(i);return 0.5*r.m*((r.r1/100)**2+(r.r2/100)**2)};
+const masses=()=>[cfg.m1,cfg.m2,cfg.m3];
+const rIns=()=>[cfg.rIn1,cfg.rIn2];
+const Irod=()=>cfg.rodM*(cfg.rodL/100)**2/12;
+const Isys=(r,m)=>Irod()+2*m*r*r;
+const curM=()=>masses()[sel.mass]/1000;
+const curRin=()=>rIns()[sel.rin]/100;
+
+let sim;
+function resetSim(){sim={ph:0,th:0,w:0,thR:0,wR:0,k:0,lockR:false,r:cfg.rOut/100,p:0,tau:0,w0:null,w1:null};updAct()}
+function speed(){const b=(sel.part===1?SP1:SP2)[sel.speed];return cfg.vary?b*(1+(Math.random()-.5)*.16):b}
+const fr=(w,dt)=>cfg.fric?Math.max(0,w-FR*dt):w;
+const ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+
+function act(){
+ if(sim.ph===0){sim.w=speed();sim.ph=1}
+ else if(sim.ph===1){sim.w0=sim.w;sim.ph=2;sim.k=0;sim.p=0}
+ else resetSim();
+ updAct();
+}
+function step(dt){
+ if(sim.ph>=1)sim.th+=sim.w*dt;
+ if(sel.part===1){
+  if(sim.ph===1)sim.w=fr(sim.w,dt);
+  else if(sim.ph===2){
+   sim.w=fr(sim.w,dt);sim.k+=dt/0.35;
+   if(sim.k>=1){sim.k=1;sim.ph=3;const a=Id(),b=Ir(sel.ring);const wf=a*sim.w/(a+b);sim.tau=(sim.w-wf)*a/0.3}
+  }else if(sim.ph===3){
+   const a=Id(),b=Ir(sel.ring);
+   if(!sim.lockR){
+    const L=a*sim.w+b*sim.wR;sim.w-=sim.tau/a*dt;sim.wR+=sim.tau/b*dt;
+    if(sim.w<=sim.wR){sim.w=sim.wR=L/(a+b);sim.lockR=true;sim.w1=sim.w}
+   }else{sim.w=fr(sim.w,dt);sim.wR=sim.w}
+   sim.thR+=sim.wR*dt;
+  }
+ }else{
+  if(sim.ph===2&&sim.p<1){
+   const m=curM(),rO=cfg.rOut/100,L=Isys(sim.r,m)*sim.w;
+   sim.p=Math.min(1,sim.p+dt/0.6);
+   sim.r=rO+(curRin()-rO)*ease(sim.p);
+   sim.w=L/Isys(sim.r,m);
+   if(sim.p>=1)sim.w1=sim.w;
+  }else if(sim.ph>=1)sim.w=fr(sim.w,dt);
+ }
+}
+
+/* ---------- drawing ---------- */
+const cv=$('cv'),ctx=cv.getContext('2d');let dpr=1;
+function resize(){dpr=window.devicePixelRatio||1;cv.width=cv.clientWidth*dpr;cv.height=cv.clientHeight*dpr}
+new ResizeObserver(resize).observe($('stage'));
+
+function labels(lines){
+ ctx.font='12px '+MONO;ctx.textBaseline='top';ctx.textAlign='left';
+ lines.forEach((l,i)=>{ctx.fillStyle=i===0?'rgba(237,232,220,.9)':'rgba(237,232,220,.75)';ctx.fillText(l,16,12+i*17)});
+ return 12+lines.length*17+8;
+}
+function pointer(cx,y,cy){
+ ctx.save();ctx.strokeStyle='rgba(232,178,58,.35)';ctx.setLineDash([4,5]);ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(cx,cy);ctx.stroke();ctx.setLineDash([]);
+ ctx.fillStyle='#E8B23A';ctx.beginPath();ctx.moveTo(cx-9,y-14);ctx.lineTo(cx+9,y-14);ctx.lineTo(cx,y);ctx.closePath();ctx.fill();ctx.restore();
+}
+function annulus(r1,r2){ctx.beginPath();ctx.arc(0,0,r2,0,TAU);ctx.arc(0,0,r1,0,TAU,true)}
+
+function draw1(W,H){
+ const r=ringOf(sel.ring);
+ const top=labels([
+  `${t('disc')}  M = ${cfg.dM.toFixed(2)} kg   R = ${cfg.dR.toFixed(1)} cm`,
+  `${t('ringL')} ${sel.ring?'B':'A'}  m = ${r.m.toFixed(2)} kg   r_in = ${r.r1.toFixed(1)} cm   r_out = ${r.r2.toFixed(1)} cm`]);
+ const maxR=Math.max(cfg.dR,r.r2*1.07);
+ const avail=Math.max(40,Math.min(W/2-16,(H-top)/2-22));
+ const s=avail/maxR,cx=W/2,cy=top+(H-top)/2+8,Rd=cfg.dR*s;
+ // disc
+ ctx.save();ctx.translate(cx,cy);ctx.rotate(sim.th);
+ const g=ctx.createRadialGradient(-Rd*.3,-Rd*.3,Rd*.1,0,0,Rd);g.addColorStop(0,'#5A6B7D');g.addColorStop(1,'#2C3A4A');
+ ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,Rd,0,TAU);ctx.fill();
+ ctx.strokeStyle='rgba(237,232,220,.35)';ctx.lineWidth=2;ctx.stroke();
+ ctx.strokeStyle='rgba(237,232,220,.08)';ctx.lineWidth=1;
+ [.35,.7].forEach(f=>{ctx.beginPath();ctx.arc(0,0,Rd*f,0,TAU);ctx.stroke()});
+ ctx.fillStyle='rgba(11,26,43,.6)';
+ for(let i=0;i<6;i++){const a=i*TAU/6+TAU/12;ctx.beginPath();ctx.arc(Math.sin(a)*Rd*.86,-Math.cos(a)*Rd*.86,Math.max(2,Rd*.025),0,TAU);ctx.fill()}
+ ctx.strokeStyle='#EDE8DC';ctx.lineWidth=Math.max(3,Rd*.025);ctx.lineCap='round';
+ ctx.beginPath();ctx.moveTo(0,-Rd*.1);ctx.lineTo(0,-Rd*.97);ctx.stroke();
+ ctx.fillStyle='#1A2533';ctx.beginPath();ctx.arc(0,0,Math.max(5,Rd*.07),0,TAU);ctx.fill();
+ ctx.restore();
+ // ring
+ let lift=1;if(sim.ph<2)lift=1;else if(sim.ph===2)lift=1-ease(sim.k);else lift=0;
+ const sc=1+.07*lift,off=12*lift,ri=r.r1*s,ro=r.r2*s;
+ if(lift>0){ctx.save();ctx.translate(cx+off,cy+off);ctx.fillStyle='rgba(0,0,0,.45)';annulus(ri,ro);ctx.fill('evenodd');ctx.restore()}
+ ctx.save();ctx.translate(cx,cy);ctx.rotate(sim.thR);ctx.scale(sc,sc);
+ const rg=ctx.createRadialGradient(0,0,ri,0,0,ro);rg.addColorStop(0,'#8A6A3A');rg.addColorStop(.5,'#C9A35E');rg.addColorStop(1,'#8A6A3A');
+ ctx.fillStyle=rg;annulus(ri,ro);ctx.fill('evenodd');
+ ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,ro,0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(0,0,ri,0,TAU);ctx.stroke();
+ ctx.fillStyle='#7FD4A8';ctx.beginPath();ctx.arc(0,-(ri+ro)/2,Math.max(3.5,(ro-ri)*.3),0,TAU);ctx.fill();
+ ctx.restore();
+ pointer(cx,cy-Math.max(Rd,ro*sc)-6,cy);
+}
+
+function draw2(W,H){
+ const m=masses()[sel.mass],ri=rIns()[sel.rin];
+ const top=labels([
+  `${t('rod')}  M = ${cfg.rodM.toFixed(2)} kg   L = ${cfg.rodL.toFixed(1)} cm`,
+  `${t('mass')}  m = ${m} g × 2`,
+  `r = ${cfg.rOut.toFixed(1)} cm → ${ri.toFixed(1)} cm`]);
+ const avail=Math.max(40,Math.min(W/2-16,(H-top)/2-22));
+ const s=avail/(cfg.rodL/2),cx=W/2,cy=top+(H-top)/2+8,Lh=cfg.rodL/2*s;
+ ctx.save();ctx.strokeStyle='rgba(237,232,220,.12)';ctx.setLineDash([3,6]);ctx.beginPath();ctx.arc(cx,cy,Lh,0,TAU);ctx.stroke();ctx.restore();
+ ctx.save();ctx.translate(cx,cy);ctx.rotate(sim.th);
+ const g=ctx.createLinearGradient(-6,0,6,0);g.addColorStop(0,'#4A5868');g.addColorStop(.5,'#9AA8B6');g.addColorStop(1,'#4A5868');
+ ctx.fillStyle=g;ctx.fillRect(-5,-Lh,10,2*Lh);
+ ctx.strokeStyle='rgba(11,26,43,.55)';ctx.lineWidth=1;
+ for(let c=2;c<cfg.rodL/2;c+=2){[-1,1].forEach(d=>{ctx.beginPath();ctx.moveTo(-5,d*c*s);ctx.lineTo(c%10?-1:3,d*c*s);ctx.stroke()})}
+ ctx.fillStyle='#7FD4A8';ctx.fillRect(-6,-Lh-2,12,10);
+ ctx.fillStyle='#EDE8DC';ctx.fillRect(-6,Lh-8,12,10);
+ const sz=Math.max(12,Math.min(36,(2.2+m/100*.8)*s));
+ [-1,1].forEach(d=>{const y=d*sim.r*100*s;
+  const mg=ctx.createLinearGradient(-sz/2,0,sz/2,0);mg.addColorStop(0,'#6E7C8C');mg.addColorStop(.5,'#C7D0DA');mg.addColorStop(1,'#6E7C8C');
+  ctx.fillStyle=mg;ctx.fillRect(-sz/2,y-sz/2,sz,sz);ctx.strokeStyle='rgba(11,26,43,.7)';ctx.strokeRect(-sz/2,y-sz/2,sz,sz)});
+ ctx.fillStyle='#1A2533';ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill();ctx.strokeStyle='rgba(237,232,220,.4)';ctx.stroke();
+ ctx.restore();
+ pointer(cx,cy-Lh-8,cy);
+}
+function draw(){
+ const W=cv.clientWidth,H=cv.clientHeight;
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+ sel.part===1?draw1(W,H):draw2(W,H);
+}
+
+/* ---------- stopwatch ---------- */
+let swRun=false,swT0=0,swAcc=0;
+function swNow(){return swAcc+(swRun?performance.now()-swT0:0)}
+function fmt(ms){const cs=Math.floor(ms/10),m=Math.floor(cs/6000),sec=Math.floor(cs/100)%60,c=cs%100;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+String(c).padStart(2,'0')}
+function swToggle(){if(swRun){swAcc+=performance.now()-swT0;swRun=false}else{swT0=performance.now();swRun=true}$('go').textContent=swRun?'❚❚':'▶'}
+function swReset(){swRun=false;swAcc=0;$('go').textContent='▶';$('time').textContent=fmt(0)}
+
+/* ---------- UI ---------- */
+function chip(txt,on,fn,cls){const b=document.createElement('button');b.className='chip'+(cls?' '+cls:'')+(on?' on':'');b.textContent=txt;b.onclick=fn;return b}
+function el(cls,txt){const d=document.createElement('span');d.className=cls;if(txt)d.textContent=txt;return d}
+function buildChips(){
+ const c=$('chips');c.innerHTML='';
+ const set=(k,v)=>()=>{sel[k]=v;resetSim();buildChips();updText()};
+ c.append(chip(t('p1'),sel.part===1,set('part',1),'pt'),chip(t('p2'),sel.part===2,set('part',2),'pt'),el('sep'),el('gl','ω₀'));
+ t('sp').forEach((n,i)=>c.append(chip(n,sel.speed===i,set('speed',i))));
+ c.append(el('sep'));
+ if(sel.part===1){['A','B'].forEach((n,i)=>c.append(chip(t('ring')+' '+n,sel.ring===i,set('ring',i))))}
+ else{
+  c.append(el('gl','m'));masses().forEach((v,i)=>c.append(chip(v+' g',sel.mass===i,set('mass',i))));
+  c.append(el('sep'),el('gl','r →'));rIns().forEach((v,i)=>c.append(chip(v+' cm',sel.rin===i,set('rin',i))));
+ }
+}
+function updAct(){
+ const a=sel.part===1?[t('spin'),t('drop'),t('reset'),t('reset')]:[t('spin'),t('pull'),t('reset')];
+ $('act').textContent=a[sim?sim.ph:0];
+}
+function updText(){
+ document.documentElement.lang=lang;
+ $('ttl').textContent=t('title');document.title=t('title');
+ $('sub').textContent=sel.part===1?t('sub1'):t('sub2');
+ $('lang').textContent=lang==='en'?'ไทย':'EN';
+ $('tch').textContent=t('teacher');$('credit').textContent=t('credit');
+ $('mT').textContent=t('mT');$('pwb').textContent=t('enter');
+ ['hKey','hGuide','hSet'].forEach(k=>$(k).textContent=t(k));
+ $('lFric').textContent=t('fric');$('lVary').textContent=t('vary');
+ $('apply').textContent=t('apply');$('defb').textContent=t('def');$('linkb').textContent=t('link');
+ $('hChg').textContent=t('chg');$('cB').textContent=t('cB');
+ $('guide').innerHTML='';t('guide').forEach(g=>{const li=document.createElement('li');li.textContent=g;$('guide').append(li)});
+ buildFields();updAct();renderKey();
+}
+
+/* ---------- teacher ---------- */
+const DEFPW='9;5:4*5\u2018';
+const norm=s=>String(s).replace(/[\u2018\u2019\u201B`\u00B4]/g,"'").trim();
+let unlocked=false;
+function openT(){$('mod').classList.remove('hide');$('login').classList.toggle('hide',unlocked);$('tb').classList.toggle('hide',!unlocked);$('pwm').textContent='';if(!unlocked)setTimeout(()=>$('pw').focus(),50);else{fillFields();renderKey()}}
+function tryPw(){if(norm($('pw').value)===norm(LS.get('amlab_pw')||DEFPW)){unlocked=true;$('pw').value='';openT()}else $('pwm').textContent=t('wrong')}
+function buildFields(){
+ const f=$('fields');f.innerHTML='';
+ FIELDS.forEach(([k,en,th])=>{const d=document.createElement('div');d.innerHTML=`<label>${lang==='en'?en:th}</label><input type="number" step="any" id="f_${k}">`;f.append(d)});
+ fillFields();
+}
+function fillFields(){FIELDS.forEach(([k])=>{const i=$('f_'+k);if(i)i.value=cfg[k]});$('fric').checked=!!cfg.fric;$('vary').checked=!!cfg.vary}
+function readFields(){
+ const n={};for(const [k] of FIELDS){const v=parseFloat($('f_'+k).value);if(!(v>0))return null;n[k]=v}
+ if(n.aR1>=n.aR2||n.bR1>=n.bR2||n.rIn1>=n.rOut||n.rIn2>=n.rOut||n.rOut>n.rodL/2)return null;
+ n.fric=$('fric').checked;n.vary=$('vary').checked;return n;
+}
+function applyCfg(){const n=readFields();if(!n){$('setm').textContent=t('bad');return null}cfg=Object.assign({},n);LS.set('amlab_cfg',JSON.stringify(cfg));resetSim();buildChips();renderKey();$('setm').textContent=t('applied');return cfg}
+function f4(x){return x.toFixed(5)}
+function renderKey(){
+ if(!unlocked||!sim)return;
+ let s='';
+ if(sel.part===1){
+  const a=Id();s+=`I_disc = ½MR² = ${f4(a)} kg·m²\n`;
+  [0,1].forEach(i=>{const b=Ir(i);s+=`${t('ring')} ${i?'B':'A'}: I = ½m(r_in²+r_out²) = ${f4(b)} kg·m²   ω/ω₀ = ${(a/(a+b)).toFixed(3)}\n`});
+  if(sim.w0&&sim.w1){const b=Ir(sel.ring);
+   s+=`\n${t('last')} (${t('ring')} ${sel.ring?'B':'A'}):\nω₀ = ${sim.w0.toFixed(3)} rad/s (${(sim.w0/TAU).toFixed(3)} rev/s)\nω  = ${sim.w1.toFixed(3)} rad/s (${(sim.w1/TAU).toFixed(3)} rev/s)\nL ${t('before')} = ${(a*sim.w0).toFixed(5)}   L ${t('after')} = ${((a+b)*sim.w1).toFixed(5)} kg·m²/s`}
+  else s+=`\n${t('last')}: ${t('none')}`;
+ }else{
+  const rO=cfg.rOut/100;s+=`I_rod = ML²/12 = ${f4(Irod())} kg·m²\n`;
+  masses().forEach(mg=>rIns().forEach(rc=>{const m=mg/1000,I1=Isys(rO,m),I2=Isys(rc/100,m);s+=`m=${mg} g, r=${cfg.rOut}→${rc} cm: I₁=${f4(I1)} I₂=${f4(I2)} ω₂/ω₁=${(I1/I2).toFixed(3)}\n`}));
+  if(sim.w0&&sim.w1){const m=curM(),I1=Isys(rO,m),I2=Isys(curRin(),m);
+   s+=`\n${t('last')}:\nω₁ = ${sim.w0.toFixed(3)} rad/s (${(sim.w0/TAU).toFixed(3)} rev/s)\nω₂ = ${sim.w1.toFixed(3)} rad/s (${(sim.w1/TAU).toFixed(3)} rev/s)\nL ${t('before')} = ${(I1*sim.w0).toFixed(5)}   L ${t('after')} = ${(I2*sim.w1).toFixed(5)} kg·m²/s`}
+  else s+=`\n${t('last')}: ${t('none')}`;
+ }
+ $('key').textContent=s;
+}
+function makeLink(){
+ const c=applyCfg();if(!c)return;
+ const url=location.href.split('?')[0].split('#')[0]+'?c='+encodeURIComponent(btoa(JSON.stringify(c)));
+ const i=$('link');i.classList.remove('hide');i.value=url;i.select();
+ const done=()=>$('setm').textContent=t('copied');
+ if(navigator.clipboard)navigator.clipboard.writeText(url).then(done,()=>{try{document.execCommand('copy');done()}catch(e){}});
+ else{try{document.execCommand('copy');done()}catch(e){}}
+}
+function changePw(){
+ if($('cE').value.trim().toLowerCase()==='rossumont@gmail.com'&&$('cA').value==='LhaMoAPL9545='&&$('cN').value.trim()){
+  LS.set('amlab_pw',$('cN').value.trim());$('cM').textContent=t('cOK');$('cE').value=$('cA').value=$('cN').value='';
+ }else $('cM').textContent=t('cBad');
+}
+
+/* ---------- wire up ---------- */
+$('act').onclick=act;$('go').onclick=swToggle;$('rs').onclick=swReset;
+$('lang').onclick=()=>{lang=lang==='en'?'th':'en';LS.set('amlab_lang',lang);buildChips();updText()};
+$('tch').onclick=openT;$('mx').onclick=()=>$('mod').classList.add('hide');
+$('mod').onclick=e=>{if(e.target===$('mod'))$('mod').classList.add('hide')};
+$('pwb').onclick=tryPw;$('pw').onkeydown=e=>{if(e.key==='Enter')tryPw()};
+$('apply').onclick=applyCfg;
+$('defb').onclick=()=>{cfg=Object.assign({},DEF);fillFields();applyCfg()};
+$('linkb').onclick=makeLink;$('cB').onclick=changePw;
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&$('mod').classList.contains('hide')){e.preventDefault();swToggle()}});
+
+resetSim();buildChips();updText();resize();
+let last=performance.now(),keyT=0;
+function loop(now){
+ const dt=Math.min(.05,(now-last)/1000);last=now;
+ step(dt);draw();
+ $('time').textContent=fmt(swNow());
+ keyT+=dt;if(keyT>.5){keyT=0;if(!$('mod').classList.contains('hide'))renderKey()}
+ requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
